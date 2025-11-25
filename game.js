@@ -627,5 +627,346 @@ document.addEventListener("DOMContentLoaded", function () {
               <div class="cmg-progress-inner" style="width:${miningEfficiency}%;"></div>
             </div>
           </div>
-  
+          <div class="cmg-buttons">
+            <button class="cmg-btn" id="cmg-mine-btn">⛏ Tap to Mine</button>
+            <button class="cmg-btn small secondary" id="cmg-sell-half-btn">Sell 50% ${state.activeCoin}</button>
+            <button class="cmg-btn small secondary" id="cmg-sell-all-btn">Sell ALL ${state.activeCoin}</button>
+          </div>
+        </div>
+
+        <div class="cmg-card">
+          <h3>🪙 Silly Coins</h3>
+          <div class="cmg-coins-list">
+            ${coinsHtml}
+          </div>
+        </div>
+
+        <div class="cmg-card">
+          <h3>📜 Mine Notes</h3>
+          <div class="cmg-log">
+            ${logHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderShop() {
+    let rigsHtml = "";
+    rigsCatalog.forEach(r => {
+      const owned = state.rigs[r.id]?.owned || 0;
+      const cost = r.baseCost * Math.pow(1.25, owned);
+      rigsHtml += `
+        <div class="cmg-rig-item">
+          <div>
+            <div class="cmg-rig-name">${r.name}</div>
+            <div class="cmg-rig-meta">+${fmt(r.hashPower, 0)} H/s · ${r.description}</div>
+            <div class="cmg-rig-meta">Owned: <strong>${owned}</strong></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.7rem;margin-bottom:3px;">Cost: <strong>$${fmt(cost, 2)}</strong></div>
+            <button class="cmg-btn small" data-buy-rig="${r.id}">Buy</button>
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="cmg-screen" data-screen="shop">
+        <div class="cmg-card">
+          <h3>🛒 Candy Shop</h3>
+          <div style="font-size:0.72rem;color:var(--cms-text-muted);margin-bottom:4px;">
+            Spend your fake cash on cute mining machines to boost your hash power.
+          </div>
+          <div class="cmg-rigs-list">
+            ${rigsHtml}
+          </div>
+        </div>
+
+        <div class="cmg-ad-slot">
+          Optional shop banner area. Any real ads here must be passive only
+          (no in-game rewards for viewing or clicking).
+        </div>
+      </div>
+    `;
+  }
+
+  function renderProfile() {
+    const portfolio = getPortfolioValue();
+    const totalRigs = rigsCatalog.reduce((sum, r) => sum + (state.rigs[r.id]?.owned || 0), 0);
+
+    return `
+      <div class="cmg-screen" data-screen="profile">
+        <div class="cmg-card">
+          <h3>👤 Miner Profile</h3>
+          <div class="cmg-row" style="align-items:center;">
+            <div class="cmg-avatar">⛏️</div>
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;">${state.nickname}</div>
+              <div style="font-size:0.72rem;color:var(--cms-text-muted);">
+                Level ${state.level} · ${fmt(portfolio, 0)} fake credits
+              </div>
+            </div>
+          </div>
+          <div class="cmg-row">
+            <span class="cmg-tag blue">Sessions played: ${state.stats.sessions || 0}</span>
+            <span class="cmg-tag green">Prestiges: ${state.stats.prestiges || 0}</span>
+          </div>
+          <div class="cmg-row">
+            <span class="cmg-tag">Rigs owned: ${totalRigs}</span>
+            <span class="cmg-tag">Manual taps: ${state.stats.manualClicks || 0}</span>
+          </div>
+          <div class="cmg-buttons">
+            <button class="cmg-btn small ghost" id="cmg-change-name-btn">✏️ Change Nickname</button>
+          </div>
+        </div>
+
+        <div class="cmg-card">
+          <h3>📅 Daily Progress</h3>
+          <div class="cmg-row">
+            <span class="cmg-tag green">Streak: ${state.daily.streak || 0} day(s)</span>
+            <span class="cmg-tag">${state.daily.claimedToday ? "Today's gift claimed" : "Gift waiting on Home tab"}</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--cms-text-muted);margin-top:4px;">
+            Tip: Open the game every day to increase your streak and boost your early fake earnings.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStats() {
+    let missionsHtml = "";
+    missionsDef.forEach(m => {
+      const progress = getMissionProgress(m);
+      const claimed = !!state.missionsClaimed[m.id];
+      const done = progress >= m.target;
+      const pct = Math.min(100, (progress / m.target) * 100);
+      missionsHtml += `
+        <div class="cmg-mission-item">
+          <div class="cmg-mission-title">${m.title}</div>
+          <div class="cmg-mission-meta">
+            <span>${m.desc}</span>
+            <span>${Math.min(progress, m.target)}/${m.target}</span>
+          </div>
+          <div class="cmg-progress-bar" style="margin-top:3px;">
+            <div class="cmg-progress-inner" style="width:${pct}%;"></div>
+          </div>
+          <div class="cmg-buttons" style="justify-content:space-between;margin-top:4px;">
+            <div>
+              <span class="cmg-tag green">+$${m.cash}</span>
+              <span class="cmg-tag blue">+${m.xp} XP</span>
+            </div>
+            <button class="cmg-btn small ghost"
+              data-mission="${m.id}"
+              ${!done || claimed ? "disabled" : ""}>
+              ${claimed ? "Claimed" : "Claim Reward"}
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    let achievementsHtml = "";
+    achievementsDef.forEach(a => {
+      const status = state.achievements[a.id];
+      const unlocked = status && status.unlocked;
+      achievementsHtml += `
+        <div class="cmg-achievement-item">
+          <div class="cmg-achievement-main">
+            <strong>${a.title}</strong>
+            <span>${a.desc}</span>
+          </div>
+          <div class="cmg-achievement-state">
+            ${unlocked ? '<span class="cmg-tag gold">Unlocked</span>' : '<span class="cmg-tag">Locked</span>'}
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="cmg-screen" data-screen="stats">
+        <div class="cmg-card">
+          <h3>🎯 Missions</h3>
+          <div style="font-size:0.72rem;color:var(--cms-text-muted);margin-bottom:4px;">
+            Complete tasks to earn extra fake cash and XP. All rewards stay inside this browser only.
+          </div>
+          <div class="cmg-mission-list">
+            ${missionsHtml}
+          </div>
+        </div>
+
+        <div class="cmg-card">
+          <h3>🏆 Achievements</h3>
+          <div class="cmg-achievements-list">
+            ${achievementsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---------- MAIN RENDER ---------- */
+
+  function render() {
+    const portfolio = getPortfolioValue();
+    const nowMultiplier = getGlobalMultiplier();
+
+    let screenHtml = "";
+    if (state.activeScreen === "home") screenHtml = renderHome();
+    else if (state.activeScreen === "mine") screenHtml = renderMine();
+    else if (state.activeScreen === "shop") screenHtml = renderShop();
+    else if (state.activeScreen === "profile") screenHtml = renderProfile();
+    else if (state.activeScreen === "stats") screenHtml = renderStats();
+
+    root.innerHTML = `
+      <div class="cmg-app-shell">
+        <div class="cmg-header">
+          <div class="cmg-header-top">
+            <div>
+              <div class="cmg-title">Crypto Miner Pro</div>
+              <div class="cmg-subtitle">Tap, upgrade & learn — all fake, all fun.</div>
+            </div>
+            <div class="cmg-pill">
+              💼 <span>Portfolio</span> $${fmt(portfolio, 2)}
+            </div>
+          </div>
+          <div class="cmg-header-bottom">
+            <div class="cmg-chip">⭐ Lv. ${state.level}</div>
+            <div class="cmg-chip">🔁 Prestige: ${state.prestigePoints || 0}</div>
+            <div class="cmg-chip">⚙️ Boost: ${fmt((nowMultiplier - 1) * 100, 1)}%</div>
+          </div>
+        </div>
+
+        <div class="cmg-main">
+          ${screenHtml}
+        </div>
+
+        <div class="cmg-bottom-nav">
+          <button class="cmg-nav-item ${state.activeScreen === "home" ? "active" : ""}" data-screen="home">
+            <div class="cmg-nav-icon">🏠</div>
+            <span>Home</span>
+          </button>
+          <button class="cmg-nav-item ${state.activeScreen === "mine" ? "active" : ""}" data-screen="mine">
+            <div class="cmg-nav-icon">⛏</div>
+            <span>Mine</span>
+          </button>
+          <button class="cmg-nav-item ${state.activeScreen === "shop" ? "active" : ""}" data-screen="shop">
+            <div class="cmg-nav-icon">🛒</div>
+            <span>Shop</span>
+          </button>
+          <button class="cmg-nav-item ${state.activeScreen === "profile" ? "active" : ""}" data-screen="profile">
+            <div class="cmg-nav-icon">👤</div>
+            <span>Profile</span>
+          </button>
+          <button class="cmg-nav-item ${state.activeScreen === "stats" ? "active" : ""}" data-screen="stats">
+            <div class="cmg-nav-icon">📊</div>
+            <span>Stats</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    /* NAV */
+    root.querySelectorAll(".cmg-nav-item").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const scr = this.getAttribute("data-screen");
+        if (!scr) return;
+        state.activeScreen = scr;
+        render();
+        saveState();
+      });
+    });
+
+    /* HOME */
+    const dailyBtn = document.getElementById("cmg-daily-btn");
+    if (dailyBtn) dailyBtn.addEventListener("click", claimDaily);
+
+    const prestigeBtn = document.getElementById("cmg-prestige-btn");
+    if (prestigeBtn) prestigeBtn.addEventListener("click", doPrestige);
+
+    const softResetBtn = document.getElementById("cmg-soft-reset-btn");
+    if (softResetBtn) softResetBtn.addEventListener("click", softReset);
+
+    /* MINE */
+    const mineBtn = document.getElementById("cmg-mine-btn");
+    if (mineBtn) mineBtn.addEventListener("click", clickMineBurst);
+
+    const sellHalfBtn = document.getElementById("cmg-sell-half-btn");
+    if (sellHalfBtn) sellHalfBtn.addEventListener("click", () => sellCoin(0.5));
+
+    const sellAllBtn = document.getElementById("cmg-sell-all-btn");
+    if (sellAllBtn) sellAllBtn.addEventListener("click", () => sellCoin(1));
+
+    root.querySelectorAll("[data-coin]").forEach(el => {
+      el.addEventListener("click", function () {
+        const id = this.getAttribute("data-coin");
+        if (!id) return;
+        state.activeCoin = id;
+        pushLog("Switched target coin to " + id + ".");
+        render();
+        saveState();
+      });
+    });
+
+    /* SHOP */
+    root.querySelectorAll("[data-buy-rig]").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const id = this.getAttribute("data-buy-rig");
+        if (!id) return;
+        buyRig(id);
+      });
+    });
+
+    /* STATS (missions) */
+    root.querySelectorAll("[data-mission]").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const id = this.getAttribute("data-mission");
+        if (!id) return;
+        claimMission(id);
+      });
+    });
+
+    /* PROFILE nickname */
+    const nameBtn = document.getElementById("cmg-change-name-btn");
+    if (nameBtn) {
+      nameBtn.addEventListener("click", function () {
+        const current = state.nickname || "Guest Miner";
+        const next = prompt("Enter your miner nickname:", current);
+        if (!next) return;
+        state.nickname = String(next).slice(0, 20);
+        pushLog("Nickname changed to " + state.nickname + ".");
+        render();
+        saveState();
+      });
+    }
+  }
+
+  /* ---------- INITIALISE GAME ---------- */
+
+  loadState();
+  if (!state.coins || Object.keys(state.coins).length === 0) initCoinsAndRigs();
+  if (!state.rigs || Object.keys(state.rigs).length === 0) initCoinsAndRigs();
+  recalcHashPower();
+  initDaily();
+  state.stats.sessions = (state.stats.sessions || 0) + 1;
+
+  const nowMs = Date.now();
+  processOffline(nowMs);
+  state.lastTimestamp = nowMs;
+
+  pushLog("Game loaded. Session #" + state.stats.sessions + " started. 🎮");
+  checkAchievements();
+  render();
+  saveState();
+
+  /* GAME LOOP */
+  setInterval(function () {
+    simulatePrices();
+    autoMine(1);
+    state.lastTimestamp = Date.now();
+    render();
+    saveState();
+  }, 1000);
+});
 
