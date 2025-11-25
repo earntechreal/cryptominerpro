@@ -10,94 +10,194 @@
 
     <div id="app">
         <header>
-            <div class="level-badge">Lvl <span id="ui-level">1</span></div>
-            <div class="balance-display">
-                <div class="fiat">$<span id="ui-cash">0</span></div>
+            <div class="header-left">
+                <div class="level-badge">Lvl <span id="ui-level">1</span></div>
+            </div>
+            
+            <div class="balance-container">
+                <div class="fiat">$<span id="ui-cash">0.00</span></div>
                 <div class="crypto">₿<span id="ui-crypto">0.000000</span></div>
             </div>
+
+            <button id="menu-btn" class="icon-btn">⋮</button>
         </header>
+
+        <div id="sidebar-overlay" class="hidden"></div>
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h3>Menu</h3>
+                <button id="close-sidebar">×</button>
+            </div>
+            <ul class="sidebar-menu">
+                <li onclick="openModal('modal-about')">About Game</li>
+                <li onclick="openModal('modal-privacy')">Privacy Policy</li>
+                <li onclick="openModal('modal-contact')">Contact Us</li>
+            </ul>
+            <div class="sidebar-footer">
+                v1.0.2 Stable
+            </div>
+        </aside>
 
         <main id="main-content">
             
             <section id="screen-home" class="screen active">
-                <div class="card stats-card">
-                    <h3>Current Market</h3>
-                    <div class="price-ticker">1 FakeCoin = $<span id="ui-market-price">100</span></div>
-                    <p class="subtitle">Prices change every 10 seconds!</p>
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
+                
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <h3>Market Status</h3>
+                        <span class="live-dot">● Live</span>
+                    </div>
+                    <div class="price-big">$<span id="ui-market-price">100.00</span></div>
+                    <p class="subtext">Current FakeCoin Value</p>
+                    <div class="chart-line"></div>
                 </div>
 
-                <div class="card action-card">
-                    <h3>Quick Actions</h3>
-                    <button id="btn-sell-all" class="btn btn-green">Sell All Crypto</button>
+                <div class="card glass-card">
+                    <button id="btn-sell-all" class="btn btn-primary full-width">SELL ALL ASSETS</button>
                 </div>
 
-                <div class="card log-card">
-                    <h3>System Log</h3>
+                <div class="card glass-card log-panel">
+                    <h3>System Logs</h3>
                     <ul id="event-log"></ul>
                 </div>
+
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
             </section>
 
             <section id="screen-mining" class="screen">
-                <div class="mining-visual">
-                    <div class="hash-rate-display">⚡ <span id="ui-hashrate">0</span> H/s</div>
-                    <div id="click-miner" class="miner-button">
-                        <div class="inner-circle">
-                            TAP
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
+
+                <div class="mining-container">
+                    <div class="hash-rate-badge">
+                        <span class="icon">⚡</span> 
+                        <span id="ui-hashrate">0</span> H/s
+                    </div>
+                    
+                    <div id="click-miner" class="miner-circle">
+                        <div class="miner-inner">
+                            <span class="tap-icon">👆</span>
                         </div>
+                        <div class="ripple"></div>
+                    </div>
+                    
+                    <div class="status-pill">
+                        Auto-Miner: <span id="ui-auto-mining" class="status-text">OFF</span>
                     </div>
                 </div>
-                <div class="mining-stats">
-                    <p>Auto-Mining: <span id="ui-auto-mining">OFF</span></p>
-                </div>
+                
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
             </section>
 
             <section id="screen-shop" class="screen">
-                <h2>Hardware Store</h2>
-                <div id="shop-container" class="shop-list">
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
+                
+                <h2 class="section-title">Hardware Market</h2>
+                <div id="shop-container" class="shop-grid">
                     </div>
             </section>
 
             <section id="screen-profile" class="screen">
-                <div class="profile-header">
-                    <div class="avatar">👤</div>
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
+                
+                <div class="profile-card glass-card">
+                    <div class="profile-avatar">👤</div>
                     <h2>Miner One</h2>
-                    <p>XP: <span id="ui-xp">0</span> / <span id="ui-xp-needed">100</span></p>
-                    <div class="progress-bar"><div id="ui-xp-bar" class="fill"></div></div>
+                    <div class="xp-container">
+                        <div class="xp-labels">
+                            <span>XP Progress</span>
+                            <span><span id="ui-xp">0</span> / <span id="ui-xp-needed">100</span></span>
+                        </div>
+                        <div class="progress-track"><div id="ui-xp-bar" class="progress-fill"></div></div>
+                    </div>
                 </div>
 
-                <div class="achievements-list">
-                    <h3>Missions</h3>
-                    <ul id="mission-list">
-                        </ul>
+                <div class="glass-card">
+                    <h3>Active Missions</h3>
+                    <ul id="mission-list" class="mission-list"></ul>
                 </div>
 
-                <div class="prestige-zone">
-                    <h3>Prestige</h3>
-                    <p>Reset game for <span id="ui-prestige-mult">0</span>% bonus revenue.</p>
-                    <button id="btn-prestige" class="btn btn-danger" disabled>Prestige (Need $1M)</button>
+                <div class="glass-card danger-zone">
+                    <h3>Prestige System</h3>
+                    <p>Reset for <span id="ui-prestige-mult">0</span>% Revenue Bonus.</p>
+                    <button id="btn-prestige" class="btn btn-danger" disabled>PRESTIGE (Req: $1M)</button>
                 </div>
             </section>
 
             <section id="screen-stats" class="screen">
-                <h2>Statistics</h2>
-                <ul class="stats-list">
-                    <li>Total Taps: <span id="stat-taps">0</span></li>
-                    <li>Total Cash Earned: $<span id="stat-total-cash">0</span></li>
-                    <li>Prestige Count: <span id="stat-prestiges">0</span></li>
-                    <li>Playtime: <span id="stat-playtime">0</span>s</li>
-                </ul>
+                <div class="ad-banner"><span>Banner Ad Placeholder</span></div>
+                
+                <h2 class="section-title">Analytics</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="label">Total Taps</span>
+                        <span class="value" id="stat-taps">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">Lifetime Earned</span>
+                        <span class="value">$<span id="stat-total-cash">0</span></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">Prestiges</span>
+                        <span class="value" id="stat-prestiges">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="label">Session Time</span>
+                        <span class="value"><span id="stat-playtime">0</span>s</span>
+                    </div>
+                </div>
             </section>
         </main>
 
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-target="screen-home">🏠<br>Home</button>
-            <button class="nav-btn" data-target="screen-mining">⛏️<br>Mine</button>
-            <button class="nav-btn" data-target="screen-shop">🛒<br>Shop</button>
-            <button class="nav-btn" data-target="screen-profile">👤<br>Profile</button>
-            <button class="nav-btn" data-target="screen-stats">📊<br>Stats</button>
-        </nav>
+        <div id="modal-container" class="modal-overlay hidden">
+            <div class="modal-box">
+                <button class="close-modal" onclick="closeModal()">×</button>
+                <div id="modal-about" class="modal-content hidden">
+                    <h2>About</h2>
+                    <p>Crypto Miner Pro is a high-fidelity simulation of cryptocurrency mining operations. Manage your rig, play the market, and become a tycoon.</p>
+                </div>
+                <div id="modal-privacy" class="modal-content hidden">
+                    <h2>Privacy Policy</h2>
+                    <p>We value your privacy.</p>
+                    <ul>
+                        <li>No personal data is collected.</li>
+                        <li>Game progress is stored locally on your device (localStorage).</li>
+                        <li>No cookies are used for tracking.</li>
+                    </ul>
+                </div>
+                <div id="modal-contact" class="modal-content hidden">
+                    <h2>Contact Us</h2>
+                    <p>Have questions or feedback?</p>
+                    <div class="contact-box">
+                        <strong>Email Support:</strong><br>
+                        <a href="mailto:earntechreal@gmail.com">earntechreal@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div id="toast-container"></div>
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-target="screen-home">
+                <span class="icon">🏠</span>
+                <span class="label">Home</span>
+            </button>
+            <button class="nav-btn" data-target="screen-mining">
+                <span class="icon">⛏️</span>
+                <span class="label">Mine</span>
+            </button>
+            <button class="nav-btn" data-target="screen-shop">
+                <span class="icon">🛒</span>
+                <span class="label">Shop</span>
+            </button>
+            <button class="nav-btn" data-target="screen-profile">
+                <span class="icon">👤</span>
+                <span class="label">Profile</span>
+            </button>
+            <button class="nav-btn" data-target="screen-stats">
+                <span class="icon">📊</span>
+                <span class="label">Stats</span>
+            </button>
+        </nav>
     </div>
 
     <script src="game.js"></script>

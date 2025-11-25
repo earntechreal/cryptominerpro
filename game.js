@@ -1,12 +1,11 @@
 // --- GAME CONFIGURATION ---
 const CONF = {
-    autoSaveInterval: 10000, // 10 seconds
-    priceUpdateInterval: 5000, // 5 seconds
-    fps: 1, // Auto-mine tick rate
+    autoSaveInterval: 10000,
+    priceUpdateInterval: 5000,
     baseCryptoPrice: 100
 };
 
-// --- INITIAL STATE ---
+// --- STATE ---
 const defaultState = {
     cash: 0,
     crypto: 0,
@@ -17,60 +16,42 @@ const defaultState = {
     xpNeeded: 100,
     prestigeCount: 0,
     prestigeMult: 1,
-    stats: {
-        taps: 0,
-        playtime: 0
-    },
-    rigs: {
-        gpu1: 0,
-        gpu2: 0,
-        asic1: 0
-    },
-    achievements: [],
-    missions: {
-        taps100: false,
-        earn1000: false
-    }
+    stats: { taps: 0, playtime: 0 },
+    rigs: { gpu1: 0, gpu2: 0, asic1: 0 },
+    achievements: []
 };
 
-// Shop Items Config
 const shopItems = [
-    { id: 'gpu1', name: 'Old Laptop', cost: 50, power: 1, icon: '💻' },
-    { id: 'gpu2', name: 'Gaming GPU', cost: 250, power: 5, icon: '🎮' },
-    { id: 'asic1', name: 'ASIC Miner', cost: 1000, power: 25, icon: '🔋' }
+    { id: 'gpu1', name: 'Starter Laptop', cost: 50, power: 1, icon: '💻' },
+    { id: 'gpu2', name: 'Gaming Rig', cost: 250, power: 5, icon: '🖥️' },
+    { id: 'asic1', name: 'ASIC Farm', cost: 1000, power: 25, icon: '🏭' }
 ];
 
-let state = JSON.parse(JSON.stringify(defaultState)); // Deep copy
+let state = JSON.parse(JSON.stringify(defaultState));
 let currentPrice = CONF.baseCryptoPrice;
 
-// --- INITIALIZATION ---
+// --- INIT ---
 function init() {
     loadGame();
     setupUI();
-    setupNavigation();
+    setupSidebar();
     
-    // Game Loops
-    setInterval(gameLoop, 1000); // Core loop (1 sec)
+    setInterval(gameLoop, 1000);
     setInterval(fluctuatePrice, CONF.priceUpdateInterval);
     setInterval(saveGame, CONF.autoSaveInterval);
     
-    fluctuatePrice(); // Set initial price
+    fluctuatePrice();
     renderShop();
-    logEvent("Welcome to Crypto Miner Pro!");
+    updateUI();
 }
 
 // --- CORE MECHANICS ---
-
 function gameLoop() {
     // Auto Mine
-    const autoMineAmount = calculateAutoHash() / 1000; // Scale down for realism
-    if (autoMineAmount > 0) {
-        mineCrypto(autoMineAmount);
-    }
+    const autoMineAmount = calculateAutoHash() / 1000;
+    if (autoMineAmount > 0) mineCrypto(autoMineAmount);
     
-    // Playtime
     state.stats.playtime++;
-    
     checkMissions();
     updateUI();
 }
@@ -88,54 +69,65 @@ function mineCrypto(amount) {
 }
 
 function clickMine(e) {
-    const tapPower = (state.hashPower * state.prestigeMult) / 500; 
-    mineCrypto(tapPower);
+    // Base click is 1% of total hash or min 0.001
+    const baseTap = 0.001;
+    const powerBonus = (state.hashPower * state.prestigeMult) / 2000;
+    const amount = baseTap + powerBonus;
+    
+    mineCrypto(amount);
     state.stats.taps++;
     addXP(1);
     
-    // Floating Text Effect
-    showFloatingText(e.clientX, e.clientY, `+${tapPower.toFixed(6)}`);
+    // Calculate position for visual effect
+    let x = e.clientX;
+    let y = e.clientY;
     
+    // If it's a touch event, fix coordinates
+    if(!x && e.touches && e.touches.length > 0) {
+        x = e.touches[0].clientX;
+        y = e.touches[0].clientY;
+    }
+
+    // Default center if undefined
+    if(!x) {
+        const rect = document.getElementById('click-miner').getBoundingClientRect();
+        x = rect.left + rect.width/2;
+        y = rect.top + rect.height/2;
+    }
+
+    showFloatingText(x, y, `+${amount.toFixed(5)}`);
     updateUI();
 }
 
 function fluctuatePrice() {
-    // Random movement -10% to +10%
-    const change = (Math.random() * 0.2) - 0.1;
+    const change = (Math.random() * 0.3) - 0.15; // +/- 15% volatility
     currentPrice = currentPrice * (1 + change);
-    // Clamp price
-    if(currentPrice < 50) currentPrice = 50;
-    if(currentPrice > 500) currentPrice = 500;
-    
+    if(currentPrice < 20) currentPrice = 20;
+    if(currentPrice > 1000) currentPrice = 1000;
     updateUI();
 }
 
 function sellCrypto() {
     if (state.crypto <= 0) return;
-    
     const value = state.crypto * currentPrice;
     state.cash += value;
     state.lifetimeCash += value;
     state.crypto = 0;
-    
-    logEvent(`Sold crypto for $${value.toFixed(2)}`);
+    logEvent(`Sold Assets: +$${value.toFixed(2)}`);
     addXP(10);
     updateUI();
 }
 
 function buyItem(itemId) {
     const item = shopItems.find(i => i.id === itemId);
-    // Cost formula: Base * (1.15 ^ quantity)
     const currentCost = Math.floor(item.cost * Math.pow(1.15, state.rigs[itemId]));
     
     if (state.cash >= currentCost) {
         state.cash -= currentCost;
         state.rigs[itemId]++;
-        logEvent(`Bought ${item.name}`);
-        renderShop(); // Re-render to update price
+        logEvent(`Acquired: ${item.name}`);
+        renderShop();
         updateUI();
-    } else {
-        alert("Not enough fake cash!");
     }
 }
 
@@ -145,20 +137,16 @@ function addXP(amount) {
         state.level++;
         state.xp = 0;
         state.xpNeeded = Math.floor(state.xpNeeded * 1.5);
-        logEvent(`Leveled up! Now Lvl ${state.level}`);
-        showConfetti();
+        logEvent(`Level Up! reached Lvl ${state.level}`);
     }
 }
 
 function prestige() {
     if (state.lifetimeCash < 1000000) return;
-    
-    if(confirm("Reset progress for a permanent multiplier boost?")) {
-        const bonus = Math.floor(state.lifetimeCash / 100000); // 1% per 100k
+    if(confirm("Prestige Reset: Are you sure?")) {
+        const bonus = Math.floor(state.lifetimeCash / 100000);
         state.prestigeMult += (bonus / 100);
         state.prestigeCount++;
-        
-        // Reset basics
         state.cash = 0;
         state.crypto = 0;
         state.lifetimeCash = 0;
@@ -166,43 +154,37 @@ function prestige() {
         state.rigs = { gpu1: 0, gpu2: 0, asic1: 0 };
         state.level = 1;
         state.xp = 0;
-        
         saveGame();
         location.reload();
     }
 }
 
-// --- UI FUNCTIONS ---
-
+// --- UI & HELPERS ---
 function updateUI() {
-    // Header
-    document.getElementById('ui-cash').innerText = state.cash.toFixed(2);
+    document.getElementById('ui-cash').innerText = state.cash.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('ui-crypto').innerText = state.crypto.toFixed(6);
     document.getElementById('ui-level').innerText = state.level;
     
     // Home
-    document.getElementById('ui-market-price').innerText = currentPrice.toFixed(2);
     const marketEl = document.getElementById('ui-market-price');
-    marketEl.style.color = currentPrice >= CONF.baseCryptoPrice ? '#2ecc71' : '#e74c3c';
+    marketEl.innerText = currentPrice.toFixed(2);
+    marketEl.style.color = currentPrice >= CONF.baseCryptoPrice ? '#10b981' : '#ef4444';
 
     // Mine
     const totalHash = calculateAutoHash();
     document.getElementById('ui-hashrate').innerText = totalHash;
-    document.getElementById('ui-auto-mining').innerText = totalHash > 0 ? "ON" : "OFF";
+    document.getElementById('ui-auto-mining').innerText = totalHash > 0 ? "ACTIVE" : "OFF";
     
     // Profile
     document.getElementById('ui-xp').innerText = state.xp;
     document.getElementById('ui-xp-needed').innerText = state.xpNeeded;
-    const xpPct = (state.xp / state.xpNeeded) * 100;
-    document.getElementById('ui-xp-bar').style.width = `${xpPct}%`;
+    document.getElementById('ui-xp-bar').style.width = `${(state.xp/state.xpNeeded)*100}%`;
     document.getElementById('ui-prestige-mult').innerText = Math.round((state.prestigeMult - 1) * 100);
-    
-    const prestigeBtn = document.getElementById('btn-prestige');
-    prestigeBtn.disabled = state.lifetimeCash < 1000000;
+    document.getElementById('btn-prestige').disabled = state.lifetimeCash < 1000000;
     
     // Stats
     document.getElementById('stat-taps').innerText = state.stats.taps;
-    document.getElementById('stat-total-cash').innerText = state.lifetimeCash.toFixed(0);
+    document.getElementById('stat-total-cash').innerText = state.lifetimeCash.toLocaleString();
     document.getElementById('stat-prestiges').innerText = state.prestigeCount;
     document.getElementById('stat-playtime').innerText = state.stats.playtime;
 }
@@ -210,19 +192,19 @@ function updateUI() {
 function renderShop() {
     const container = document.getElementById('shop-container');
     container.innerHTML = '';
-    
     shopItems.forEach(item => {
         const quantity = state.rigs[item.id];
         const cost = Math.floor(item.cost * Math.pow(1.15, quantity));
+        const canAfford = state.cash >= cost;
         
         const el = document.createElement('div');
         el.className = 'shop-item';
         el.innerHTML = `
-            <div class="shop-info">
-                <h4>${item.icon} ${item.name}</h4>
-                <small>+${item.power} H/s | Owned: ${quantity}</small>
+            <div>
+                <div style="font-weight:bold; font-size:1.1rem">${item.icon} ${item.name}</div>
+                <div style="color:#94a3b8; font-size:0.8rem">+${item.power} H/s • Owned: ${quantity}</div>
             </div>
-            <button class="buy-btn" onclick="buyItem('${item.id}')">$${cost}</button>
+            <button class="buy-btn" style="opacity:${canAfford?1:0.5}" onclick="buyItem('${item.id}')">$${cost}</button>
         `;
         container.appendChild(el);
     });
@@ -231,16 +213,15 @@ function renderShop() {
 function checkMissions() {
     const list = document.getElementById('mission-list');
     list.innerHTML = '';
-    
     const missions = [
-        { id: 'taps100', txt: 'Tap 100 times', done: state.stats.taps >= 100 },
-        { id: 'earn1000', txt: 'Earn $1,000 Lifetime', done: state.lifetimeCash >= 1000 }
+        { txt: 'Tap 100 times', done: state.stats.taps >= 100 },
+        { txt: 'Earn $1,000 Lifetime', done: state.lifetimeCash >= 1000 },
+        { txt: 'Reach Level 5', done: state.level >= 5 }
     ];
-
     missions.forEach(m => {
         const li = document.createElement('li');
-        li.style.color = m.done ? '#2ecc71' : '#aaa';
-        li.innerHTML = `${m.done ? '✅' : '⬜'} ${m.txt}`;
+        li.style.cssText = `padding:8px; border-bottom:1px solid rgba(255,255,255,0.05); color:${m.done?'#10b981':'#94a3b8'}`;
+        li.innerHTML = `${m.done ? '✓' : '○'} ${m.txt}`;
         list.appendChild(li);
     });
 }
@@ -248,10 +229,9 @@ function checkMissions() {
 function logEvent(msg) {
     const list = document.getElementById('event-log');
     const item = document.createElement('li');
-    const time = new Date().toLocaleTimeString();
-    item.innerText = `[${time}] ${msg}`;
+    item.innerText = `> ${msg}`;
     list.insertBefore(item, list.firstChild);
-    if(list.children.length > 10) list.removeChild(list.lastChild);
+    if(list.children.length > 6) list.removeChild(list.lastChild);
 }
 
 function showFloatingText(x, y, text) {
@@ -261,59 +241,72 @@ function showFloatingText(x, y, text) {
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1000);
+    setTimeout(() => el.remove(), 800);
 }
 
-function showConfetti() {
-    // Simple visual feedback for level up
-    document.body.style.backgroundColor = '#2a2a4a';
-    setTimeout(() => document.body.style.backgroundColor = '#1a1a2e', 200);
+// --- SIDEBAR & NAVIGATION ---
+function setupSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const menuBtn = document.getElementById('menu-btn');
+    const closeBtn = document.getElementById('close-sidebar');
+
+    function toggleSidebar() {
+        const isOpen = sidebar.classList.contains('open');
+        if(isOpen) {
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.remove('hidden');
+        }
+    }
+
+    menuBtn.addEventListener('click', toggleSidebar);
+    closeBtn.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
 }
 
-// --- NAVIGATION & INPUT ---
+// Exposed to global scope for HTML onclick
+window.openModal = function(modalId) {
+    document.querySelectorAll('.modal-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(modalId).classList.remove('hidden');
+    document.getElementById('modal-container').classList.remove('hidden');
+    
+    // Close sidebar if open
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+}
 
-function setupNavigation() {
-    const buttons = document.querySelectorAll('.nav-btn');
-    buttons.forEach(btn => {
+window.closeModal = function() {
+    document.getElementById('modal-container').classList.add('hidden');
+}
+
+function setupUI() {
+    const navs = document.querySelectorAll('.nav-btn');
+    navs.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Toggle active class on buttons
-            buttons.forEach(b => b.classList.remove('active'));
+            navs.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Toggle screens
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(btn.dataset.target).classList.add('active');
         });
     });
-}
 
-function setupUI() {
     document.getElementById('btn-sell-all').addEventListener('click', sellCrypto);
-    document.getElementById('click-miner').addEventListener('mousedown', clickMine);
-    // Touch support for mobile
-    document.getElementById('click-miner').addEventListener('touchstart', (e) => {
-        e.preventDefault(); // prevent mouse emulation
-        clickMine(e.touches[0]);
-    });
-    
     document.getElementById('btn-prestige').addEventListener('click', prestige);
+    
+    const miner = document.getElementById('click-miner');
+    miner.addEventListener('mousedown', clickMine);
+    miner.addEventListener('touchstart', (e) => { e.preventDefault(); clickMine(e); });
 }
 
-// --- PERSISTENCE ---
-
-function saveGame() {
-    localStorage.setItem('cryptoMinerPro_save', JSON.stringify(state));
-}
-
+// --- SAVE SYSTEM ---
+function saveGame() { localStorage.setItem('cryptoPro_v2', JSON.stringify(state)); }
 function loadGame() {
-    const saved = localStorage.getItem('cryptoMinerPro_save');
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        // Merge with default to prevent breaking on updates
-        state = { ...defaultState, ...parsed, rigs: { ...defaultState.rigs, ...parsed.rigs } };
-    }
+    const saved = localStorage.getItem('cryptoPro_v2');
+    if (saved) state = { ...defaultState, ...JSON.parse(saved), rigs: { ...defaultState.rigs, ...JSON.parse(saved).rigs } };
 }
 
-// Start
 window.onload = init;
 
