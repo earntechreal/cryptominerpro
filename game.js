@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const root = document.getElementById("crypto-miner-game-root");
   if (!root) return;
 
-  const STORAGE_KEY = "CryptoMinerProV1";
+  const STORAGE_KEY = "CryptoMinerProV2";
 
   const baseCoins = [
     { id: "BTC",  name: "BitBunny",   basePrice: 65000, difficulty: 1.0,  volatility: 0.9 },
@@ -82,7 +82,8 @@ document.addEventListener("DOMContentLoaded", function () {
       claimedToday: false
     },
     lastTimestamp: null,
-    activeScreen: "home"
+    activeScreen: "home",
+    nickname: "Guest Miner"
   };
 
   /* ---------- UTILITIES ---------- */
@@ -175,6 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       if (!state.daily) {
         state.daily = { lastDate: todayString(), streak: 1, claimedToday: false };
+      }
+      if (!state.nickname) {
+        state.nickname = "Guest Miner";
       }
     } catch (e) {
       initCoinsAndRigs();
@@ -430,11 +434,9 @@ document.addEventListener("DOMContentLoaded", function () {
     state.prestigePoints = (state.prestigePoints || 0) + 1;
     state.stats.prestiges = (state.stats.prestiges || 0) + 1;
 
-    const newP = state.prestigePoints;
     const oldLevel = state.level;
     const oldValue = getPortfolioValue();
 
-    // reset run, keep prestige
     state.cash = 1000;
     Object.keys(state.coins).forEach(id => {
       state.coins[id].amount = 0;
@@ -500,8 +502,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderHome() {
     const portfolio = getPortfolioValue();
     const xpPercent = Math.min(100, (state.xp / (state.xpToNext || 1)) * 100);
-    const today = todayString();
-    const dailyAvailable = !state.daily.claimedToday && state.daily.lastDate === today;
 
     return `
       <div class="cmg-screen" data-screen="home">
@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
           <div class="cmg-row" style="margin-top:4px;">
             <span class="cmg-tag blue">Manual taps: ${state.stats.manualClicks || 0}</span>
-            <span class="cmg-tag green">Rigs: ${state.stats.rigsBought || 0} bought</span>
+            <span class="cmg-tag green">Rigs bought: ${state.stats.rigsBought || 0}</span>
           </div>
         </div>
 
@@ -537,7 +537,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <span class="cmg-tag">${state.daily.claimedToday ? "Already claimed" : "Tap to collect!"}</span>
           </div>
           <div class="cmg-buttons">
-            <button class="cmg-btn small" id="cmg-daily-btn" ${dailyAvailable ? "" : "disabled"}>
+            <button class="cmg-btn small" id="cmg-daily-btn" ${(!state.daily.claimedToday && state.daily.lastDate === todayString()) ? "" : "disabled"}>
               🎁 Claim Daily Reward
             </button>
           </div>
@@ -549,7 +549,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <span class="cmg-tag gold">Bonus: ${fmt((getGlobalMultiplier() - 1) * 100, 1)}% extra mining power</span>
           </div>
           <div class="cmg-row" style="font-size:0.7rem;color:var(--cms-text-muted);">
-            Prestige resets your run but makes ALL future mining stronger forever.
+            Prestige resets your run but makes all future mining stronger forever.
           </div>
           <div class="cmg-buttons">
             <button class="cmg-btn small danger" id="cmg-prestige-btn" ${canPrestige() ? "" : "disabled"}>
@@ -625,4 +625,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
             <div class="cmg-progress-bar">
               <div class="cmg-progress-inner" style="width:${miningEfficiency}%;"></div>
-       
+            </div>
+          </div>
+  
+

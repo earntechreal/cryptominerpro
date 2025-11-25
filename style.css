@@ -379,7 +379,7 @@ body {
   background: #dbeafe;
 }
 
-/* MISSIONS / ACHIEVEMENTS */
+/* LISTS */
 
 .cmg-mission-list,
 .cmg-achievements-list {
@@ -478,7 +478,7 @@ body {
   box-shadow: 0 -3px 0 #fb7185 inset;
 }
 
-/* AD SLOT (if you ever embed passive ads) */
+/* AD SLOT (if you embed passive ads) */
 
 .cmg-ad-slot {
   margin-top: 4px;
@@ -489,6 +489,19 @@ body {
   font-size: 0.66rem;
   text-align: center;
   color: var(--cms-text-muted);
+}
+
+/* PROFILE AVATAR */
+
+.cmg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #fed7aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 
 /* RESPONSIVE */
@@ -502,3 +515,4 @@ body {
     height: 600px;
   }
 }
+
