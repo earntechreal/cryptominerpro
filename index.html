@@ -1,13 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Crypto Miner Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Miner Pro</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="crypto-miner-game-root"></div>
-  <script src="game.js"></script>
+
+    <div id="app">
+        <header>
+            <div class="level-badge">Lvl <span id="ui-level">1</span></div>
+            <div class="balance-display">
+                <div class="fiat">$<span id="ui-cash">0</span></div>
+                <div class="crypto">₿<span id="ui-crypto">0.000000</span></div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            
+            <section id="screen-home" class="screen active">
+                <div class="card stats-card">
+                    <h3>Current Market</h3>
+                    <div class="price-ticker">1 FakeCoin = $<span id="ui-market-price">100</span></div>
+                    <p class="subtitle">Prices change every 10 seconds!</p>
+                </div>
+
+                <div class="card action-card">
+                    <h3>Quick Actions</h3>
+                    <button id="btn-sell-all" class="btn btn-green">Sell All Crypto</button>
+                </div>
+
+                <div class="card log-card">
+                    <h3>System Log</h3>
+                    <ul id="event-log"></ul>
+                </div>
+            </section>
+
+            <section id="screen-mining" class="screen">
+                <div class="mining-visual">
+                    <div class="hash-rate-display">⚡ <span id="ui-hashrate">0</span> H/s</div>
+                    <div id="click-miner" class="miner-button">
+                        <div class="inner-circle">
+                            TAP
+                        </div>
+                    </div>
+                </div>
+                <div class="mining-stats">
+                    <p>Auto-Mining: <span id="ui-auto-mining">OFF</span></p>
+                </div>
+            </section>
+
+            <section id="screen-shop" class="screen">
+                <h2>Hardware Store</h2>
+                <div id="shop-container" class="shop-list">
+                    </div>
+            </section>
+
+            <section id="screen-profile" class="screen">
+                <div class="profile-header">
+                    <div class="avatar">👤</div>
+                    <h2>Miner One</h2>
+                    <p>XP: <span id="ui-xp">0</span> / <span id="ui-xp-needed">100</span></p>
+                    <div class="progress-bar"><div id="ui-xp-bar" class="fill"></div></div>
+                </div>
+
+                <div class="achievements-list">
+                    <h3>Missions</h3>
+                    <ul id="mission-list">
+                        </ul>
+                </div>
+
+                <div class="prestige-zone">
+                    <h3>Prestige</h3>
+                    <p>Reset game for <span id="ui-prestige-mult">0</span>% bonus revenue.</p>
+                    <button id="btn-prestige" class="btn btn-danger" disabled>Prestige (Need $1M)</button>
+                </div>
+            </section>
+
+            <section id="screen-stats" class="screen">
+                <h2>Statistics</h2>
+                <ul class="stats-list">
+                    <li>Total Taps: <span id="stat-taps">0</span></li>
+                    <li>Total Cash Earned: $<span id="stat-total-cash">0</span></li>
+                    <li>Prestige Count: <span id="stat-prestiges">0</span></li>
+                    <li>Playtime: <span id="stat-playtime">0</span>s</li>
+                </ul>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-target="screen-home">🏠<br>Home</button>
+            <button class="nav-btn" data-target="screen-mining">⛏️<br>Mine</button>
+            <button class="nav-btn" data-target="screen-shop">🛒<br>Shop</button>
+            <button class="nav-btn" data-target="screen-profile">👤<br>Profile</button>
+            <button class="nav-btn" data-target="screen-stats">📊<br>Stats</button>
+        </nav>
+
+        <div id="toast-container"></div>
+    </div>
+
+    <script src="game.js"></script>
 </body>
 </html>
